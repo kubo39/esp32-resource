@@ -7,12 +7,14 @@
 
 ## FPU
 
-- libgcc's optimized routines: https://gitlab.indel.ch/thirdparty/gcc/-/tree/2b7e7fc4b2f9ca5448d1c7c0873d3b79d8a70c27/libgcc/config/xtensa
+- libgcc's optimized routines: https://github.com/espressif/gcc/tree/esp-12_2_0/libgcc/config/xtensa
 - No, the ESP32-S2 is not faster at floating point operations - The Weekend Writeup: https://blog.llandsmeer.com/tech/2021/04/08/esp32-s2-fpu.html
 
 ## repositries
 
+- GCC: https://github.com/espressif/gcc
 - LLVM: https://github.com/espressif/llvm-project
+- crosstool-NG: https://github.com/espressif/crosstool-NG
 - Qemu: https://github.com/espressif/qemu
 - OpenOCD: https://github.com/espressif/openocd-esp32
 - Rust: https://github.com/esp-rs/rust
