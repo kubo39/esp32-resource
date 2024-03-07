@@ -5,6 +5,11 @@
 - Xtensa ISA manual: https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/ip/tensilica-ip/isa-summary.pdf
 - espressif's xtensa ISA manual: https://dl.espressif.com/github_assets/espressif/xtensa-isa-doc/releases/download/latest/Xtensa.pdf
 
+## Assembly
+
+- ESP32でC/C++からアセンブラを使用する - Zenn: https://zenn.dev/lovyan03/articles/esp32-asm-001
+- ESP32のアセンブラを読み解く - Zenn: https://zenn.dev/lovyan03/articles/esp32-asm-002
+
 ## FPU
 
 - libgcc's optimized routines: https://github.com/espressif/gcc/tree/esp-12_2_0/libgcc/config/xtensa
