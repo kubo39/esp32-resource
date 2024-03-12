@@ -110,6 +110,56 @@ sqrt_f32:
 
 [libgccのsqrtfルーチン](https://github.com/espressif/gcc/blob/esp-13.2.0_20230928/libgcc/config/xtensa/ieee754-sf.S#L1827-L1874)を有効にするマクロ定義はcrosstool-NGが参照している[xtensa-overlaysレポジトリの設定](https://github.com/espressif/xtensa-overlays/blob/dd1cf19f6eb327a9db51043439974a6de13f5c7f/xtensa_esp32s3/gcc/include/xtensa-config.h#L101)で定義されている。
 
+sqrtfルーチンの内容をこちらにも記載する。
+
+```asm
+	/* Square root */
+
+	.align	4
+	.global	__ieee754_sqrtf
+	.type	__ieee754_sqrtf, @function
+__ieee754_sqrtf:
+	leaf_entry	sp, 16
+
+	wfr		f1, a2
+
+	sqrt0.s		f2, f1
+	const.s		f3, 0
+	maddn.s		f3, f2, f2
+	nexp01.s	f4, f1
+	const.s		f0, 3
+	addexp.s	f4, f0
+	maddn.s		f0, f3, f4
+	nexp01.s	f3, f1
+	neg.s		f5, f3
+	maddn.s		f2, f0, f2
+	const.s		f0, 0
+	const.s		f6, 0
+	const.s		f7, 0
+	maddn.s		f0, f5, f2
+	maddn.s		f6, f2, f4
+	const.s		f4, 3
+	maddn.s		f7, f4, f2
+	maddn.s		f3, f0, f0
+	maddn.s		f4, f6, f2
+	neg.s		f2, f7
+	maddn.s		f0, f3, f2
+	maddn.s		f7, f4, f7
+	mksadj.s	f2, f1
+	nexp01.s	f1, f1
+	maddn.s		f1, f0, f0
+	neg.s		f3, f7
+	addexpm.s	f0, f2
+	addexp.s	f3, f2
+	divn.s		f0, f1, f3
+
+	rfr		a2, f0
+
+	leaf_return
+```
+
+ちゃんとsingle fp拡張命令とFP用のレジスタが利用されており、引数として渡ってくるa2レジスタと返り値として渡す必要があるa2レジスタへの操作以外はGPRs(General Purpose Registers)を利用しないよう注意深く実装されている。
+
 ## まとめ
 
 Rust with esp32s3はデフォルトでlibgccが持っている、Floating Point Coprocessorに最適化された実装を利用しているので心配せずに使って問題ない。
