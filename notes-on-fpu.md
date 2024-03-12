@@ -81,13 +81,13 @@ sqrt_f32:
 
 ```asm
 	entry	a1, 32     # スタックフレーム確保とWindowed register ABI
-                       #  caller/calleeレジスタの対応
+	                   #  caller/calleeレジスタの対応
 	l32r	a8, sqrtf  # a8レジスタにsqrtfシンボルをロード
 	mov.n	a10, a2    # sqrt_f32関数の第一引数をa10レジスタに移動
-                       # (a10レジスタはsqrtf関数の第一引数となる)
+	                   # (a10レジスタはsqrtf関数の第一引数となる)
 	callx8	a8         # sqrtf関数を呼び出す
 	mov.n	a2, a10    # a10レジスタの内容を返り値用のレジスタa2に移動
-                       # (a10レジスタにはsqrtf関数の返り値がある)
+	                   # (a10レジスタにはsqrtf関数の返り値がある)
 	retw.n             # 関数からリターン
 ```
 
