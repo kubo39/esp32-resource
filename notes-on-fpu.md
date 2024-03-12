@@ -54,7 +54,41 @@ $ xtensa-esp32s3-elf-gcc --version| head -1
 xtensa-esp-elf-gcc (crosstool-NG esp-13.2.0_20230928) 13.2.0
 ```
 
-これで[ビルド対象のGCCのタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。なぜリンカとしてしか使わないのにレポジトリまで見に行く必要があるか？というのは後々触れていく。
+これで[espupが入れるGCCのバージョンタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。
+
+それではこれが本当に利用されているか、プロジェクトを作ってためしてみよう。
+
+```console
+$ cargo generate esp-rs/esp-idf-template cargo
+⚠️   Favorite `esp-rs/esp-idf-template` not found in config, using it as a git repository: https://github.com/esp-rs/esp-idf-template.git
+🤷   Project Name: rust-esp32s3-example
+🔧   Destination: /home/kubo39/dev/espressif/rust-esp32s3-example ...
+🔧   project-name: rust-esp32s3-example ...
+🔧   Generating template ...
+✔ 🤷   Which MCU to target? · esp32s3
+✔ 🤷   Configure advanced template options? · false
+🔧   Moving generated files into: `/home/kubo39/dev/espressif/rust-esp32s3-example`...
+🔧   Initializing a fresh Git repository
+✨   Done! New project created /home/kubo39/dev/espressif/rust-esp32s3-example
+```
+
+しかしこれはちょっとGCCのバージョンがずれてしまっている。
+
+```console
+$ cargo build
+(...)
+$ xtensa-esp32s3-elf-readelf -p .comment target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example
+
+String dump of section '.comment':
+  [     0]  GCC: (crosstool-NG esp-12.2.0_20230208) 12.2.0
+  [    2f]  rustc version 1.76.0-nightly (88269fa9e 2024-02-09) (1.76.0.1)
+  [    6e]  GCC: (crosstool-NG esp-2021r1) 8.4.0
+```
+
+これは[esp-idf v5.1.3が指定しているtools.json](https://github.com/espressif/esp-idf/blob/v5.1.3/tools/tools.json#L326)のバージョンが古いためと思われる。
+embuildはプロジェクト生成時に指定されたesp-idfのバージョンを持ってきてツールとともに展開するようになっている。
+とはいえxtensa関連のコードはいずれのバージョンでも大して変わりがないのでそれほど気にしなくても問題なさそうだ。
+気になる人はldproxyの引数で任意のリンカへの切り替えが可能であるので新しいバージョンに切り替えて利用するのがよいだろう。
 
 ## sqrtfの実装
 
