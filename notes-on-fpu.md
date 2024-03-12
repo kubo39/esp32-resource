@@ -38,6 +38,15 @@ LLVM version: 17.0.1
 
 [crosstool-NGレポジトリ](https://github.com/espressif/crosstool-NG/tree/esp-13.2.0_20230928)内でどのGCCおよびbinutilsのバージョンを指定しているかというと、めちゃくちゃわかりにくいのだが[samplesディレクトリ内のcrosstool.config](https://github.com/espressif/crosstool-NG/blob/esp-13.2.0_20230928/samples/xtensa-esp-elf/crosstool.config)に記載されている。
 
+```config
+(...)
+CT_GCC_DEVEL_URL="https://github.com/espressif/gcc.git"
+CT_GCC_DEVEL_BRANCH="esp-13.2.0_20230928"
+(...)
+CT_BINUTILS_DEVEL_URL="https://github.com/espressif/binutils-gdb.git"
+CT_BINUTILS_DEVEL_BRANCH="esp-2.41.0_20230928"
+```
+
 こちらも手元の環境と合致していることが確認できる。
 
 ```console
@@ -45,7 +54,7 @@ $ xtensa-esp32s3-elf-gcc --version| head -1
 xtensa-esp-elf-gcc (crosstool-NG esp-13.2.0_20230928) 13.2.0
 ```
 
-これでビルド対象の[GCCのタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。なぜリンカとしてしか使わないのにレポジトリまで見に行く必要があるか？というのは後々触れていく。
+これで[ビルド対象のGCCのタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。なぜリンカとしてしか使わないのにレポジトリまで見に行く必要があるか？というのは後々触れていく。
 
 ## espressif/LLVM
 
@@ -108,7 +117,22 @@ sqrt_f32:
 
 この関数定義は[newlib libc側](https://github.com/espressif/newlib-esp32/blob/esp-4.3.0_20230928/newlib/libm/machine/xtensa/ef_sqrt.c)にあり、`XCHAL_HAVE_FP_SQRT`マクロが定義されている場合はGCCのビルトイン関数`__ieee754_sqrtf`関数を利用する旨が書かれている。
 
+```c
+#include <xtensa/config/core-isa.h>
+
+#if !XCHAL_HAVE_FP_SQRT
+#error "__ieee754_sqrtf form common libm must be used"
+#else
+/* Built-in GCC __ieee754_sqrtf must be used */
+#endif
+```
+
 [libgccのsqrtfルーチン](https://github.com/espressif/gcc/blob/esp-13.2.0_20230928/libgcc/config/xtensa/ieee754-sf.S#L1827-L1874)を有効にするマクロ定義はcrosstool-NGが参照している[xtensa-overlaysレポジトリの設定](https://github.com/espressif/xtensa-overlays/blob/dd1cf19f6eb327a9db51043439974a6de13f5c7f/xtensa_esp32s3/gcc/include/xtensa-config.h#L101)で定義されている。
+
+```c
+#undef XCHAL_HAVE_FP_SQRT
+#define XCHAL_HAVE_FP_SQRT		1
+```
 
 sqrtfルーチンの内容をこちらにも記載する。
 
