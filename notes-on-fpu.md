@@ -117,6 +117,25 @@ sqrt_f32:
 
 この関数定義は[newlib libc側](https://github.com/espressif/newlib-esp32/blob/esp-4.3.0_20230928/newlib/libm/machine/xtensa/ef_sqrt.c)にあり、`XCHAL_HAVE_FP_SQRT`マクロが定義されている場合はGCCのビルトイン関数`__ieee754_sqrtf`関数を利用する旨が書かれている。
 
+- [newlib/libm/machine/xtensa/Makefile.inc](https://github.com/espressif/newlib-esp32/blob/esp-4.3.0_20230928/newlib/libm/machine/xtensa/Makefile.inc)
+
+```makefile
+%C%_src = \
+	%D%/feclearexcept.c %D%/fegetenv.c %D%/fegetexcept.c %D%/fegetexceptflag.c \
+	%D%/fegetround.c %D%/feholdexcept.c %D%/feraiseexcept.c %D%/fetestexcept.c \
+	%D%/feupdateenv.c
+
+if XTENSA_XCHAL_HAVE_FP_SQRT
+%C%_src += \
+	%D%/ef_sqrt.c
+endif
+
+libm_a_CFLAGS_%C% = -D_LIBM
+libm_a_SOURCES += $(%C%_src)
+```
+
+- [newlib/libm/machine/xtensa/ef_sqrt.c](https://github.com/espressif/newlib-esp32/blob/esp-4.3.0_20230928/newlib/libm/machine/xtensa/ef_sqrt.c)
+
 ```c
 #include <xtensa/config/core-isa.h>
 
@@ -187,8 +206,6 @@ __ieee754_sqrtf:
 ## まとめ
 
 Rust with esp32s3はデフォルトでlibgccが持っている、Floating Point Coprocessorに最適化された実装を利用しているので心配せずに使って問題ない。
-
--------------------------
 
 [espup]: https://github.com/esp-rs/espup
 [rustbuild]: https://github.com/esp-rs/rust-build
