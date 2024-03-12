@@ -1,6 +1,6 @@
 # Rustはesp32s3でちゃんとFPUを使ってくれるのか？
 
-Rustはesp32s3でちゃんとFloating Point Coprocessorを扱ってくれるのか？(正確にいうと、デフォルトで除算やsqrtなどの実装が最適化された実装になってくれるのか)というのが気になる。
+Rustはesp32s3でちゃんとFloating Point Coprocessorを扱ってくれるのか？(正確にいうと、デフォルトで除算やsqrtなどの実装がsingle fp拡張に最適化された実装になってくれるのか)というのが気になる。
 
 ## esp-rs/rustのバイナリはどう転がってくるか
 
@@ -56,7 +56,7 @@ xtensa-esp-elf-gcc (crosstool-NG esp-13.2.0_20230928) 13.2.0
 
 これで[ビルド対象のGCCのタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。なぜリンカとしてしか使わないのにレポジトリまで見に行く必要があるか？というのは後々触れていく。
 
-## espressif/LLVM
+## sqrtfの実装
 
 ここからRustおよびLLVMが実際にどのように浮動小数点数を使った処理をコンパイルしていくのか？というのをsqrtf(32ビットの浮動小数点数のsqrtルーチン)を例にみていく。
 
