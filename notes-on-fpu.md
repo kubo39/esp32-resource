@@ -56,7 +56,7 @@ xtensa-esp-elf-gcc (crosstool-NG esp-13.2.0_20230928) 13.2.0
 
 これで[espupが入れるGCCのバージョンタグ](https://github.com/espressif/gcc/tree/esp-13.2.0_20230928)がわかった。
 
-それではこれが本当に利用されているか、プロジェクトを作ってためしてみよう。
+それではこれが本当に利用されているかesp-idfプロジェクトを作ってためしてみよう。
 
 ```console
 $ cargo generate esp-rs/esp-idf-template cargo
@@ -87,6 +87,7 @@ String dump of section '.comment':
 
 これは[esp-idf v5.1.3が指定しているtools.json](https://github.com/espressif/esp-idf/blob/v5.1.3/tools/tools.json#L326)のバージョンが古いためと思われる。
 embuildはプロジェクト生成時に指定されたesp-idfのバージョンを持ってきてツールとともに展開するようになっている。
+
 とはいえxtensa関連のコードはいずれのバージョンでも大して変わりがないのでそれほど気にしなくても問題なさそうだ。
 気になる人はldproxyの引数で任意のリンカへの切り替えが可能であるので新しいバージョンに切り替えて利用するのがよいだろう。
 
@@ -237,9 +238,98 @@ __ieee754_sqrtf:
 
 ちゃんとsingle fp拡張命令とFP用のレジスタが利用されており、引数として渡ってくるa2レジスタと返り値として渡す必要があるa2レジスタへの操作以外はGPRs(General Purpose Registers)を利用しないよう注意深く実装されている。
 
-## まとめ
+## 実際に
 
-Rust with esp32s3はデフォルトでlibgccが持っている、Floating Point Coprocessorに最適化された実装を利用しているので心配せずに使って問題ない。
+論より証拠、ということで実際のバイナリを見るのが結局一番である。
+
+テンプレートで生成したコードにsqrtメソッドを使う処理を追加する。
+
+```rust
+fn main() {
+    // It is necessary to call this function once. Otherwise some patches to the runtime
+    // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
+    esp_idf_svc::sys::link_patches();
+
+    // Bind the log crate to the ESP Logging facilities
+    esp_idf_svc::log::EspLogger::initialize_default();
+
+    log::info!("Hello, world!");
+
+    // 以下二行を追加
+    let ans = (5.0_f32).sqrt();
+    log::info!("(5.0).sqrt() = {}", ans);
+}
+```
+
+しかしバイナリをみてみるとシンボルすら存在していない。
+
+```console
+$ cargo build -q
+$ xtensa-esp32s3-elf-nm target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example| grep sqrt
+$
+```
+
+実体がないわけではないようだ。
+
+```console
+$ xtensa-esp32s3-elf-readelf -p .flash.rodata target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example| grep sqrt
+  [    68]  (5.0).sqrt() =
+```
+
+```console
+$ xtensa-esp32s3-elf-objdump -d target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example| grep -A 30 _ZN20rust_esp32s3_example4main17hf98358a820cefb84E
+42004f00 <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E>:
+42004f00:	00a136        	entry	a1, 80
+42004f03:	04c1a2        	addi	a10, a1, 4
+42004f06:	ec4981        	l32r	a8, 4200002c <_stext+0xc> (420068c8 <_ZN11esp_idf_sys12link_patches17hffb97eb4add7e8c7E>)
+42004f09:	0008e0        	callx8	a8
+42004f0c:	ec4981        	l32r	a8, 42000030 <_stext+0x10> (420051cc <_ZN11esp_idf_svc3log9EspLogger18initialize_default17ha514c84e6cced950E>)
+42004f0f:	0008e0        	callx8	a8
+42004f12:	ec4841        	l32r	a4, 42000034 <_stext+0x14> (3fc93000 <_ZN3log20MAX_LOG_LEVEL_FILTER17h763732fb8bc56b2aE>)
+42004f15:	0488      	l32i.n	a8, a4, 0
+42004f17:	050c      	movi.n	a5, 0
+42004f19:	160c      	movi.n	a6, 1
+42004f1b:	ec4a71        	l32r	a7, 42000044 <_stext+0x24> (4200687c <_ZN3log13__private_api3log17h44c9357af96303c0E>)
+42004f1e:	1c38b6        	bltui	a8, 3, 42004f3e <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E+0x3e>
+42004f21:	5159      	s32i.n	a5, a1, 20
+42004f23:	2169      	s32i.n	a6, a1, 8
+42004f25:	ec4481        	l32r	a8, 42000038 <_stext+0x18> (3c050148 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x28>)
+42004f28:	1189      	s32i.n	a8, a1, 4
+42004f2a:	4159      	s32i.n	a5, a1, 16
+42004f2c:	ec4481        	l32r	a8, 4200003c <_stext+0x1c> (3c050138 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x18>)
+42004f2f:	3189      	s32i.n	a8, a1, 12
+42004f31:	04c1a2        	addi	a10, a1, 4
+42004f34:	3b0c      	movi.n	a11, 3
+42004f36:	ec42c1        	l32r	a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f39:	9d0c      	movi.n	a13, 9
+42004f3b:	0007e0        	callx8	a7
+42004f3e:	ec4281        	l32r	a8, 42000048 <_stext+0x28> (400f1bbd <rom_rx_gain_force+0xeb791>)
+42004f41:	0189      	s32i.n	a8, a1, 0
+42004f43:	0488      	l32i.n	a8, a4, 0
+42004f45:	290c      	movi.n	a9, 2
+42004f47:	26b987        	bgeu	a9, a8, 42004f71 <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E+0x71>
+42004f4a:	5159      	s32i.n	a5, a1, 20
+42004f4c:	2169      	s32i.n	a6, a1, 8
+42004f4e:	ec3f81        	l32r	a8, 4200004c <_stext+0x2c> (3c050198 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x78>)
+42004f51:	1189      	s32i.n	a8, a1, 4
+42004f53:	4169      	s32i.n	a6, a1, 16
+42004f55:	1cc182        	addi	a8, a1, 28
+42004f58:	3189      	s32i.n	a8, a1, 12
+42004f5a:	ec3d81        	l32r	a8, 42000050 <_stext+0x30> (42032cd8 <_ZN4core3fmt5float52_$LT$impl$u20$core..fmt..Display$u20$for$u20$f32$GT$3fmt17hc35c15e3727bc05dE>)
+42004f5d:	8189      	s32i.n	a8, a1, 32
+42004f5f:	00c182        	addi	a8, a1, 0
+42004f62:	7189      	s32i.n	a8, a1, 28
+42004f64:	04c1a2        	addi	a10, a1, 4
+42004f67:	3b0c      	movi.n	a11, 3
+42004f69:	ec35c1        	l32r	a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f6c:	cd0c      	movi.n	a13, 12
+42004f6e:	0007e0        	callx8	a7
+42004f71:	f01d      	retw.n
+```
+
+## まとめ？
+
+esp-rsエコシステム複雑過ぎてよくわからん
 
 [espup]: https://github.com/esp-rs/espup
 [rustbuild]: https://github.com/esp-rs/rust-build
