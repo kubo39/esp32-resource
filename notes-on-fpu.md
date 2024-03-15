@@ -277,54 +277,230 @@ $ xtensa-esp32s3-elf-readelf -p .flash.rodata target/xtensa-esp32s3-espidf/debug
 ```
 
 ```console
-$ xtensa-esp32s3-elf-objdump -d target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example| grep -A 30 _ZN20rust_esp32s3_example4main17hf98358a820cefb84E
-42004f00 <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E>:
-42004f00:	00a136        	entry	a1, 80
-42004f03:	04c1a2        	addi	a10, a1, 4
-42004f06:	ec4981        	l32r	a8, 4200002c <_stext+0xc> (420068c8 <_ZN11esp_idf_sys12link_patches17hffb97eb4add7e8c7E>)
-42004f09:	0008e0        	callx8	a8
-42004f0c:	ec4981        	l32r	a8, 42000030 <_stext+0x10> (420051cc <_ZN11esp_idf_svc3log9EspLogger18initialize_default17ha514c84e6cced950E>)
-42004f0f:	0008e0        	callx8	a8
-42004f12:	ec4841        	l32r	a4, 42000034 <_stext+0x14> (3fc93000 <_ZN3log20MAX_LOG_LEVEL_FILTER17h763732fb8bc56b2aE>)
-42004f15:	0488      	l32i.n	a8, a4, 0
-42004f17:	050c      	movi.n	a5, 0
-42004f19:	160c      	movi.n	a6, 1
-42004f1b:	ec4a71        	l32r	a7, 42000044 <_stext+0x24> (4200687c <_ZN3log13__private_api3log17h44c9357af96303c0E>)
-42004f1e:	1c38b6        	bltui	a8, 3, 42004f3e <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E+0x3e>
-42004f21:	5159      	s32i.n	a5, a1, 20
-42004f23:	2169      	s32i.n	a6, a1, 8
-42004f25:	ec4481        	l32r	a8, 42000038 <_stext+0x18> (3c050148 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x28>)
-42004f28:	1189      	s32i.n	a8, a1, 4
-42004f2a:	4159      	s32i.n	a5, a1, 16
-42004f2c:	ec4481        	l32r	a8, 4200003c <_stext+0x1c> (3c050138 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x18>)
-42004f2f:	3189      	s32i.n	a8, a1, 12
-42004f31:	04c1a2        	addi	a10, a1, 4
-42004f34:	3b0c      	movi.n	a11, 3
-42004f36:	ec42c1        	l32r	a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
-42004f39:	9d0c      	movi.n	a13, 9
-42004f3b:	0007e0        	callx8	a7
-42004f3e:	ec4281        	l32r	a8, 42000048 <_stext+0x28> (400f1bbd <rom_rx_gain_force+0xeb791>)
-42004f41:	0189      	s32i.n	a8, a1, 0
-42004f43:	0488      	l32i.n	a8, a4, 0
-42004f45:	290c      	movi.n	a9, 2
-42004f47:	26b987        	bgeu	a9, a8, 42004f71 <_ZN20rust_esp32s3_example4main17hf98358a820cefb84E+0x71>
-42004f4a:	5159      	s32i.n	a5, a1, 20
-42004f4c:	2169      	s32i.n	a6, a1, 8
-42004f4e:	ec3f81        	l32r	a8, 4200004c <_stext+0x2c> (3c050198 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x78>)
-42004f51:	1189      	s32i.n	a8, a1, 4
-42004f53:	4169      	s32i.n	a6, a1, 16
-42004f55:	1cc182        	addi	a8, a1, 28
-42004f58:	3189      	s32i.n	a8, a1, 12
-42004f5a:	ec3d81        	l32r	a8, 42000050 <_stext+0x30> (42032cd8 <_ZN4core3fmt5float52_$LT$impl$u20$core..fmt..Display$u20$for$u20$f32$GT$3fmt17hc35c15e3727bc05dE>)
-42004f5d:	8189      	s32i.n	a8, a1, 32
-42004f5f:	00c182        	addi	a8, a1, 0
-42004f62:	7189      	s32i.n	a8, a1, 28
-42004f64:	04c1a2        	addi	a10, a1, 4
-42004f67:	3b0c      	movi.n	a11, 3
-42004f69:	ec35c1        	l32r	a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
-42004f6c:	cd0c      	movi.n	a13, 12
-42004f6e:	0007e0        	callx8	a7
-42004f71:	f01d      	retw.n
+$ xtensa-esp32s3-elf-objdump -Cd target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example
+(...)
+2004f00 <rust_esp32s3_example::main>:
+42004f00:       00a136          entry   a1, 80
+42004f03:       04c1a2          addi    a10, a1, 4
+42004f06:       ec4981          l32r    a8, 4200002c <_stext+0xc> (420068c8 <esp_idf_sys::link_patches>)
+42004f09:       0008e0          callx8  a8
+42004f0c:       ec4981          l32r    a8, 42000030 <_stext+0x10> (420051cc <esp_idf_svc::log::EspLogger::initialize_default>)
+42004f0f:       0008e0          callx8  a8
+42004f12:       ec4841          l32r    a4, 42000034 <_stext+0x14> (3fc93000 <log::MAX_LOG_LEVEL_FILTER>)
+42004f15:       0488            l32i.n  a8, a4, 0
+42004f17:       050c            movi.n  a5, 0
+42004f19:       160c            movi.n  a6, 1
+42004f1b:       ec4a71          l32r    a7, 42000044 <_stext+0x24> (4200687c <log::__private_api::log>)
+42004f1e:       1c38b6          bltui   a8, 3, 42004f3e <rust_esp32s3_example::main+0x3e>
+42004f21:       5159            s32i.n  a5, a1, 20
+42004f23:       2169            s32i.n  a6, a1, 8
+42004f25:       ec4481          l32r    a8, 42000038 <_stext+0x18> (3c050148 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x28>)
+42004f28:       1189            s32i.n  a8, a1, 4
+42004f2a:       4159            s32i.n  a5, a1, 16
+42004f2c:       ec4481          l32r    a8, 4200003c <_stext+0x1c> (3c050138 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x18>)
+42004f2f:       3189            s32i.n  a8, a1, 12
+42004f31:       04c1a2          addi    a10, a1, 4
+42004f34:       3b0c            movi.n  a11, 3
+42004f36:       ec42c1          l32r    a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f39:       9d0c            movi.n  a13, 9
+42004f3b:       0007e0          callx8  a7
+42004f3e:       ec4281          l32r    a8, 42000048 <_stext+0x28> (400f1bbd <rom_rx_gain_force+0xeb791>)
+42004f41:       0189            s32i.n  a8, a1, 0
+42004f43:       0488            l32i.n  a8, a4, 0
+42004f45:       290c            movi.n  a9, 2
+42004f47:       26b987          bgeu    a9, a8, 42004f71 <rust_esp32s3_example::main+0x71>
+42004f4a:       5159            s32i.n  a5, a1, 20
+42004f4c:       2169            s32i.n  a6, a1, 8
+42004f4e:       ec3f81          l32r    a8, 4200004c <_stext+0x2c> (3c050198 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x78>)
+42004f51:       1189            s32i.n  a8, a1, 4
+42004f53:       4169            s32i.n  a6, a1, 16
+42004f55:       1cc182          addi    a8, a1, 28
+42004f58:       3189            s32i.n  a8, a1, 12
+42004f5a:       ec3d81          l32r    a8, 42000050 <_stext+0x30> (42032cd8 <core::fmt::float::<impl core::fmt::Display for f32>::fmt>)
+42004f5d:       8189            s32i.n  a8, a1, 32
+42004f5f:       00c182          addi    a8, a1, 0
+42004f62:       7189            s32i.n  a8, a1, 28
+42004f64:       04c1a2          addi    a10, a1, 4
+42004f67:       3b0c            movi.n  a11, 3
+42004f69:       ec35c1          l32r    a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f6c:       dd0c            movi.n  a13, 13
+42004f6e:       0007e0          callx8  a7
+42004f71:       f01d            retw.n
+```
+
+esp-idfを既存のテンプレートを用いてプロジェクトを作成した場合、リンカはespupで入れたxtensa-esp32xx-elf-gccではなく、別途cargo installで入れたldproxyになる。
+このリンカの指定は.cargo/config.tomlに記載されている。
+
+```
+[build]
+target = "xtensa-esp32s3-espidf"
+
+[target.xtensa-esp32s3-espidf]
+linker = "ldproxy"
+# runner = "espflash --monitor" # Select this runner for espflash v1.x.x
+runner = "espflash flash --monitor" # Select this runner for espflash v2.x.x
+rustflags = [ "--cfg",  "espidf_time64"] # Extending time_t for ESP IDF 5: https://github.com/esp-rs/rust/issues/110
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU="esp32s3"
+# Note: this variable is not used by the pio builder (`cargo build --features pio`)
+ESP_IDF_VERSION = "v5.1.3"
+```
+
+ldproxyはembuildでインストールされるesp-idfの依存ツールチェンのgccをリンカとして利用するようだ。
+
+```console
+$ cargo build -vv
+(...)
+[rust-esp32s3-example 0.1.0] cargo:rustc-cfg=esp_idf_compiler_float_lib_from_gcclib
+(...)
+[rust-esp32s3-example 0.1.0] cargo:rustc-cfg=esp32s3
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=--ldproxy-linker
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=/home/kubo39/dev/espressif/rust-esp32s3-example/.embuild/espressif/tools/xtensa-esp32s3-elf/esp-12.2.0_20230208/xtensa-esp32s3-elf/bin/xtensa-esp32s3-elf-gcc
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=--ldproxy-cwd
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=/home/kubo39/dev/espressif/rust-esp32s3-example/target/xtensa-esp32s3-espidf/debug/build/esp-idf-sys-5b5f16b27efefdf0/out/build
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-mlongcalls
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-ffunction-sections
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-fdata-sections
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--cref
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--defsym=IDF_TARGET_ESP32S3=0
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--Map=/home/kubo39/dev/espressif/rust-esp32s3-example/target/xtensa-esp32s3-espidf/debug/build/esp-idf-sys-5b5f16b27efefdf0/out/build/libespidf.map
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--no-warn-rwx-segments
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-fno-rtti
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-fno-lto
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--gc-sections
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-Wl,--warn-common
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.peripherals.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.rom.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.rom.api.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.rom.libgcc.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.rom.newlib.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=esp32s3.rom.version.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=memory.ld
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=-T
+[rust-esp32s3-example 0.1.0] cargo:rustc-link-arg=sections.ld
+(...)
+```
+
+そもそもlibgccとリンクしていないのだろうか？
+以下のように書き換えてみる。
+
+```rust
+(...)
+    // 以下二行を追加
+    let ans = unsafe { __ieee754_sqrtf(5.0_f32) };
+    log::info!("(5.0).sqrt() = {}", ans);
+}
+
+extern "C" {
+    fn __ieee754_sqrtf(a0: f32) -> f32;
+}
+
+```
+
+```console
+$ cargo build -q
+```
+
+明示的に`__ieee754_sqrtf`関数を呼ぶと、ちゃんとSingle FP拡張実装の関数を呼んでくれている。
+
+```console
+42004f04 <rust_esp32s3_example::main>:
+42004f04:       00a136          entry   a1, 80
+42004f07:       04c1a2          addi    a10, a1, 4
+42004f0a:       ec4881          l32r    a8, 4200002c <_stext+0xc> (420068d4 <esp_idf_sys::link_patches>)
+42004f0d:       0008e0          callx8  a8
+42004f10:       ec4881          l32r    a8, 42000030 <_stext+0x10> (420051d8 <esp_idf_svc::log::EspLogger::initialize_default>)
+42004f13:       0008e0          callx8  a8
+42004f16:       ec4741          l32r    a4, 42000034 <_stext+0x14> (3fc93000 <log::MAX_LOG_LEVEL_FILTER>)
+42004f19:       0488            l32i.n  a8, a4, 0
+42004f1b:       050c            movi.n  a5, 0
+42004f1d:       160c            movi.n  a6, 1
+42004f1f:       ec4971          l32r    a7, 42000044 <_stext+0x24> (42006888 <log::__private_api::log>)
+42004f22:       1c38b6          bltui   a8, 3, 42004f42 <rust_esp32s3_example::main+0x3e>
+42004f25:       5159            s32i.n  a5, a1, 20
+42004f27:       2169            s32i.n  a6, a1, 8
+42004f29:       ec4381          l32r    a8, 42000038 <_stext+0x18> (3c050148 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372
+716145+0x28>)
+42004f2c:       1189            s32i.n  a8, a1, 4
+42004f2e:       4159            s32i.n  a5, a1, 16
+42004f30:       ec4381          l32r    a8, 4200003c <_stext+0x1c> (3c050138 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x18>)
+42004f33:       3189            s32i.n  a8, a1, 12
+42004f35:       04c1a2          addi    a10, a1,4
+2004f38:       3b0c            movi.n  a11, 3
+42004f3a:       ec41c1          l32r    a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f3d:       9d0c            movi.n  a13, 9
+42004f3f:       0007e0          callx8  a7
+42004f42:       ec41a1          l32r    a10, 42000048 <_stext+0x28> (40a00000 <_coredump_iram_end+0x67f800>)
+42004f45:       ec4181          l32r    a8, 4200004c <_stext+0x2c> (4204c320 <__ieee754_sqrtf>)
+42004f48:       0008e0          callx8  a8
+42004f4b:       01a9            s32i.n  a10, a1, 0
+42004f4d:       0488            l32i.n  a8, a4, 0
+42004f4f:       290c            movi.n  a9, 2
+42004f51:       26b987          bgeu    a9, a8, 42004f7b <rust_esp32s3_example::main+0x77>
+42004f54:       5159            s32i.n  a5, a1, 20
+42004f56:       2169            s32i.n  a6, a1, 8
+42004f58:       ec3e81          l32r    a8, 42000050 <_stext+0x30> (3c050198 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x78>)
+42004f5b:       1189            s32i.n  a8, a1, 4
+42004f5d:       4169            s32i.n  a6, a1, 16
+42004f5f:       1cc182          addi    a8, a1, 28
+42004f62:       3189            s32i.n  a8, a1, 12
+42004f64:       ec3c81          l32r    a8, 42000054 <_stext+0x34> (42032ce4 <core::fmt::float::<impl core::fmt::Display for f32>::fmt>)
+42004f67:       8189            s32i.n  a8, a1, 32
+42004f69:       00c182          addi    a8, a1, 0
+42004f6c:       7189            s32i.n  a8, a1, 28
+42004f6e:       04c1a2          addi    a10, a1, 4
+42004f71:       3b0c            movi.n  a11, 3
+42004f73:       ec33c1          l32r    a12, 42000040 <_stext+0x20> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f76:       0d1c            movi.n  a13, 16
+42004f78:       0007e0          callx8  a7
+42004f7b:       f01d            retw.n
+42004f7d:       000000          ill
+(...)
+4204c320 <__ieee754_sqrtf>:
+4204c320:       002136          entry   a1, 16
+4204c323:       fa1250          wfr     f1, a2
+4204c326:       fa2190          sqrt0.s f2, f1
+4204c329:       fa3030          const.s f3, 0
+4204c32c:       6a3220          maddn.s f3, f2, f2
+4204c32f:       fa41b0          nexp01.s        f4, f1
+4204c332:       fa0330          const.s f0, 3
+4204c335:       fa40e0          addexp.s        f4, f0
+4204c338:       6a0340          maddn.s f0, f3, f4
+4204c33b:       fa31b0          nexp01.s        f3, f1
+4204c33e:       fa5360          neg.s   f5, f3
+4204c341:       6a2020          maddn.s f2, f0, f2
+4204c344:       fa0030          const.s f0, 0
+4204c347:       fa6030          const.s f6, 0
+4204c34a:       fa7030          const.s f7, 0
+4204c34d:       6a0520          maddn.s f0, f5, f2
+4204c350:       6a6240          maddn.s f6, f2, f4
+4204c353:       fa4330          const.s f4, 3
+4204c356:       6a7420          maddn.s f7, f4, f2
+4204c359:       6a3000          maddn.s f3, f0, f0
+4204c35c:       6a4620          maddn.s f4, f6, f2
+4204c35f:       fa2760          neg.s   f2, f7
+4204c362:       6a0320          maddn.s f0, f3, f2
+4204c365:       6a7470          maddn.s f7, f4, f7
+4204c368:       fa21c0          mksadj.s        f2, f1
+4204c36b:       fa11b0          nexp01.s        f1, f1
+4204c36e:       6a1000          maddn.s f1, f0, f0
+4204c371:       fa3760          neg.s   f3, f7
+4204c374:       fa02f0          addexpm.s       f0, f2
+4204c377:       fa32e0          addexp.s        f3, f2
+4204c37a:       7a0130          divn.s  f0, f1, f3
+4204c37d:       fa2040          rfr     a2, f0
+4204c380:       f01d            retw.n
 ```
 
 ## まとめ？
