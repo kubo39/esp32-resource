@@ -503,6 +503,62 @@ $ cargo build -q
 4204c380:       f01d            retw.n
 ```
 
+このgcc/libgccはどこから由来しているかというと、[esp-idf v5.1.3のtools.json](https://github.com/espressif/esp-idf/blob/v5.1.3/tools/tools.json#L346)の依存で、これはcrosstool-NGでビルドしたものが入ってくる。
+
+このcrosstool-NGが問題で、[このバージョンで入ってくるnewlib libcは少し古い](https://github.com/espressif/crosstool-NG/blob/esp-12.2.0_20230208/samples/xtensa-esp32s3-elf/crosstool.config#L27)
+
+```config
+(...)
+CT_NEWLIB_V_4_1=y
+CT_NEWLIB_VERSION="4.1.0"
+CT_NEWLIB_SRC_DEVEL=y
+CT_NEWLIB_DEVEL_VCS_git=y
+CT_NEWLIB_DEVEL_VCS="git"
+CT_NEWLIB_DEVEL_URL="https://github.com/espressif/newlib-esp32.git"
+CT_NEWLIB_DEVEL_BRANCH="esp-4.1.0_20230208"
+CT_NEWLIB_DEVEL_REVISION=""
+CT_NEWLIB_DEVEL_SUBDIR=""
+CT_NEWLIB_DEVEL_BOOTSTRAP=""
+CT_LIBC_NEWLIB_TARGET_CFLAGS=""
+CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-nano-malloc --enable-newlib-retargetable-locking --enable-newlib-iconv"
+CT_LIBC_NEWLIB_DISABLE_SUPPLIED_SYSCALLS=y
+CT_LIBC_NEWLIB_REENT_SMALL=y
+CT_LIBC_NEWLIB_IO_C99FMT=y
+CT_LIBC_NEWLIB_IO_LL=y
+CT_LIBC_NEWLIB_IO_FLOAT=y
+CT_LIBC_NEWLIB_IO_POS_ARGS=y
+CT_LIBC_NEWLIB_WIDE_ORIENT=n
+(...)
+```
+
+このタグのバージョンの[newlibのxtensa向けMakefile.amをみると](https://github.com/espressif/newlib-esp32/blob/esp-4.1.0_20230208/newlib/libm/machine/xtensa/Makefile.am)、newlib 4.3.0のときに確認できた`ef_sqrt.c`の実装がない。
+
+```makefile
+## Process this file with automake to generate Makefile.in
+
+AUTOMAKE_OPTIONS = cygnus
+
+INCLUDES = -I $(newlib_basedir)/../newlib/libm/common $(NEWLIB_CFLAGS) \
+	$(CROSS_CFLAGS) $(TARGET_CFLAGS)
+
+LIB_SOURCES = feclearexcept.c feraiseexcept.c feupdateenv.c	\
+	fegetround.c fegetenv.c feholdexcept.c fetestexcept.c	\
+	fegetexceptflag.c fegetexcept.c
+
+noinst_LIBRARIES = lib.a
+lib_a_SOURCES = $(LIB_SOURCES)
+lib_a_CFLAGS = $(AM_CFLAGS)
+lib_a_CCASFLAGS = $(AM_CCASFLAGS)
+noinst_DATA =
+
+include $(srcdir)/../../../Makefile.shared
+
+ACLOCAL_AMFLAGS = -I ../../.. -I ../../../..
+CONFIG_STATUS_DEPENDENCIES = $(newlib_basedir)/configure.host
+```
+
+つまりsqrtfを呼ぶだけでは`__ieee754_sqrtf`のlibgcc実装を使ってくれないのはどうやらnewlibが古かったためのようだ。
+
 ## まとめ？
 
 esp-rsエコシステム複雑過ぎてよくわからん
