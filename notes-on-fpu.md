@@ -554,7 +554,151 @@ ACLOCAL_AMFLAGS = -I ../../.. -I ../../../..
 CONFIG_STATUS_DEPENDENCIES = $(newlib_basedir)/configure.host
 ```
 
-つまりsqrtfを呼ぶだけでは`__ieee754_sqrtf`のlibgcc実装を使ってくれないのはどうやらnewlibが古かったためのようだ。
+つまりsqrtfを呼ぶだけでは`__ieee754_sqrtf`のlibgcc実装を使ってくれないのはnewlibが古かったからなのか？
+
+## do not evaluate at compile-time!
+
+ここでようやく気がついたが、このコードどうやらコンパイル時に評価してしまっている。
+
+プログラムを以下のように書き換えてみる。
+
+```rust
+#[no_mangle]
+fn singlefp(a0: f32, a1: f32) {
+    let ans = (a0).sqrt();
+    log::info!("(5.0).sqrt() = {}", ans);
+
+    let ans3 = a0 / a1;
+    log::info!("5.0_f32 / 3.0_f32 = {}", ans3);
+}
+```
+
+```console
+$ cargo build -q
+$ xtensa-esp32s3-elf-objdump -Cd target/xtensa-esp32s3-espidf/debug/rust-esp32s3-example
+```
+
+disasした結果
+
+```
+42004f0c <singlefp>:
+42004f0c:	00a136        	entry	a1, 80
+42004f0f:	ec4781        	l32r	a8, 4200002c <_stext+0xc> (4204b990 <sqrtf>)
+42004f12:	02ad      	mov.n	a10, a2
+42004f14:	0008e0        	callx8	a8
+42004f17:	11a9      	s32i.n	a10, a1, 4
+42004f19:	ec4571        	l32r	a7, 42000030 <_stext+0x10> (3fc93000 <log::MAX_LOG_LEVEL_FILTER>)
+42004f1c:	0788      	l32i.n	a8, a7, 0
+42004f1e:	040c      	movi.n	a4, 0
+42004f20:	150c      	movi.n	a5, 1
+42004f22:	ec4561        	l32r	a6, 42000038 <_stext+0x18> (42032d14 <core::fmt::float::<impl core::fmt::Display for f32>::fmt>)
+42004f25:	ec4691        	l32r	a9, 42000040 <_stext+0x20> (420068b8 <log::__private_api::log>)
+42004f28:	0199      	s32i.n	a9, a1, 0
+42004f2a:	2538b6        	bltui	a8, 3, 42004f53 <singlefp+0x47>
+42004f2d:	7149      	s32i.n	a4, a1, 28
+42004f2f:	4159      	s32i.n	a5, a1, 16
+42004f31:	ec4081        	l32r	a8, 42000034 <_stext+0x14> (3c050148 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x28>)
+42004f34:	3189      	s32i.n	a8, a1, 12
+42004f36:	6159      	s32i.n	a5, a1, 24
+42004f38:	24c182        	addi	a8, a1, 36
+42004f3b:	5189      	s32i.n	a8, a1, 20
+42004f3d:	a169      	s32i.n	a6, a1, 40
+42004f3f:	04c182        	addi	a8, a1, 4
+42004f42:	9189      	s32i.n	a8, a1, 36
+42004f44:	0cc1a2        	addi	a10, a1, 12
+42004f47:	3b0c      	movi.n	a11, 3
+42004f49:	ec3cc1        	l32r	a12, 4200003c <_stext+0x1c> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f4c:	4d0c      	movi.n	a13, 4
+42004f4e:	0188      	l32i.n	a8, a1, 0
+42004f50:	0008e0        	callx8	a8
+42004f53:	ec3c81        	l32r	a8, 42000044 <_stext+0x24> (40002274 <__divsf3>)
+42004f56:	02ad      	mov.n	a10, a2
+42004f58:	03bd      	mov.n	a11, a3
+42004f5a:	0008e0        	callx8	a8
+42004f5d:	21a9      	s32i.n	a10, a1, 8
+42004f5f:	0788      	l32i.n	a8, a7, 0
+42004f61:	290c      	movi.n	a9, 2
+42004f63:	25b987        	bgeu	a9, a8, 42004f8c <singlefp+0x80>
+42004f66:	7149      	s32i.n	a4, a1, 28
+42004f68:	4159      	s32i.n	a5, a1, 16
+42004f6a:	ec3781        	l32r	a8, 42000048 <_stext+0x28> (3c05019c <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x7c>)
+42004f6d:	3189      	s32i.n	a8, a1, 12
+42004f6f:	6159      	s32i.n	a5, a1, 24
+42004f71:	24c182        	addi	a8, a1, 36
+42004f74:	5189      	s32i.n	a8, a1, 20
+42004f76:	a169      	s32i.n	a6, a1, 40
+42004f78:	08c182        	addi	a8, a1, 8
+42004f7b:	9189      	s32i.n	a8, a1, 36
+42004f7d:	0cc1a2        	addi	a10, a1, 12
+42004f80:	3b0c      	movi.n	a11, 3
+42004f82:	ec2ec1        	l32r	a12, 4200003c <_stext+0x1c> (3c050170 <anon.803e1ef76bb95cd447cdd4924c3a9d53.0.llvm.7911434705372716145+0x50>)
+42004f85:	ad0c      	movi.n	a13, 10
+42004f87:	0188      	l32i.n	a8, a1, 0
+42004f89:	0008e0        	callx8	a8
+42004f8c:	f01d      	retw.n
+(...)
+4204b990 <sqrtf>:
+4204b990:	006136        	entry	a1, 48
+4204b993:	02ad      	mov.n	a10, a2
+4204b995:	0129      	s32i.n	a2, a1, 0
+4204b997:	201110        	or	a1, a1, a1
+4204b99a:	009f65        	call8	4204c390 <__ieee754_sqrtf>
+4204b99d:	000103        	lsi	f0, a1, 0
+4204b9a0:	1b0000        	un.s	b0, f0, f0
+4204b9a3:	211076        	bt	b0, 4204b9c8 <sqrtf+0x38>
+4204b9a6:	d80b21        	l32r	a2, 420419d4 <write+0x64> (0 <IDF_TARGET_ESP32S3>)
+4204b9a9:	fa1250        	wfr	f1, a2
+4204b9ac:	4b0010        	olt.s	b0, f0, f1
+4204b9af:	150076        	bf	b0, 4204b9c8 <sqrtf+0x38>
+4204b9b2:	201110        	or	a1, a1, a1
+4204b9b5:	f48ae5        	call8	42040264 <__errno>
+4204b9b8:	d807b1        	l32r	a11, 420419d4 <write+0x64> (0 <IDF_TARGET_ESP32S3>)
+4204b9bb:	182c      	movi.n	a8, 33
+4204b9bd:	0a89      	s32i.n	a8, a10, 0
+4204b9bf:	20abb0        	or	a10, a11, a11
+4204b9c2:	d85681        	l32r	a8, 42041b1c <write+0x1ac> (40002274 <__divsf3>)
+4204b9c5:	0008e0        	callx8	a8
+4204b9c8:	0a2d      	mov.n	a2, a10
+4204b9ca:	f01d      	retw.n
+(...)
+4204c390 <__ieee754_sqrtf>:
+4204c390:	002136        	entry	a1, 16
+4204c393:	fa1250        	wfr	f1, a2
+4204c396:	fa2190        	sqrt0.s	f2, f1
+4204c399:	fa3030        	const.s	f3, 0
+4204c39c:	6a3220        	maddn.s	f3, f2, f2
+4204c39f:	fa41b0        	nexp01.s	f4, f1
+4204c3a2:	fa0330        	const.s	f0, 3
+4204c3a5:	fa40e0        	addexp.s	f4, f0
+4204c3a8:	6a0340        	maddn.s	f0, f3, f4
+4204c3ab:	fa31b0        	nexp01.s	f3, f1
+4204c3ae:	fa5360        	neg.s	f5, f3
+4204c3b1:	6a2020        	maddn.s	f2, f0, f2
+4204c3b4:	fa0030        	const.s	f0, 0
+4204c3b7:	fa6030        	const.s	f6, 0
+4204c3ba:	fa7030        	const.s	f7, 0
+4204c3bd:	6a0520        	maddn.s	f0, f5, f2
+4204c3c0:	6a6240        	maddn.s	f6, f2, f4
+4204c3c3:	fa4330        	const.s	f4, 3
+4204c3c6:	6a7420        	maddn.s	f7, f4, f2
+4204c3c9:	6a3000        	maddn.s	f3, f0, f0
+4204c3cc:	6a4620        	maddn.s	f4, f6, f2
+4204c3cf:	fa2760        	neg.s	f2, f7
+4204c3d2:	6a0320        	maddn.s	f0, f3, f2
+4204c3d5:	6a7470        	maddn.s	f7, f4, f7
+4204c3d8:	fa21c0        	mksadj.s	f2, f1
+4204c3db:	fa11b0        	nexp01.s	f1, f1
+4204c3de:	6a1000        	maddn.s	f1, f0, f0
+4204c3e1:	fa3760        	neg.s	f3, f7
+4204c3e4:	fa02f0        	addexpm.s	f0, f2
+4204c3e7:	fa32e0        	addexp.s	f3, f2
+4204c3ea:	7a0130        	divn.s	f0, f1, f3
+4204c3ed:	fa2040        	rfr	a2, f0
+4204c3f0:	f01d      	retw.n
+(...)
+```
+
+ちゃんと`sqrtf`関数はlibgccの`___ieee754_sqrtf`を使ってくれていた。
 
 ## まとめ？
 
